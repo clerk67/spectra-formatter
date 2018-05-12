@@ -2,10 +2,14 @@
   "name": "spectra-formatter",
   "version": "1.0.0",
   "description": "NMR text generator for Supporting Information of scientific papers",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "clerk67",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "webpack": "^4.8.2",
+    "webpack-cli": "^2.1.3"
+  }
 }

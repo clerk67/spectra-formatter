@@ -1,4 +1,4 @@
-function format(data, nuc, area, freq, solvent, digits, ccDigits, printSingletMultiplicity) {
+const format = function(data, nuc, area, freq, solvent, digits, ccDigits, printSingletMultiplicity) {
   const atm = nuc.match(/^(\d+)/)[1];
   const N = nuc.match(/([A-Za-z]+)$/)[1];
   const rows = data.split('\n');
@@ -15,6 +15,8 @@ function format(data, nuc, area, freq, solvent, digits, ccDigits, printSingletMu
             result += ', ' + cols[i][0] + N;
           }
           result += ')';
+        } else if (area) {
+          result += ' (' + cols[i][0] + N + ')';
         }
         result += ', ';
       } else {
@@ -81,63 +83,62 @@ function format(data, nuc, area, freq, solvent, digits, ccDigits, printSingletMu
   return result.substring(0, result.length - 2) + ';';
 }
 
-module.exports = function(config) {
-  if (!config.data) {
-    return { error: 'INPUT_ELEMENT_NOT_SPECIFIED' };
-  }
-  const data = document.querySelector(config.data).value;
-  if (data === null || data === undefined) {
-    return { error: 'INPUT_ELEMENT_NOT_FOUND' };
-  } else if (data.length === 0) {
-    return { error: 'INPUT_ELEMENT_EMPTY' };
-  }
-  if (config.nuc && !config.nuc.match(/^\d+[A-Za-z]+$/)) {
-    return { error: 'INVALID_NUCLEUS' };
-  }
-  const nuc = config.nuc;
-  if (config.freq && (isNaN(config.freq) || config.freq <= 0)) {
-    return { error: 'INVALID_FREQUENCY' };
-  }
-  const freq = config.freq ? config.freq : 400;
-  const area = config.area ? 1 : 0;
-  let solvent = config.solvent ? config.solvent : 'CDCl3';
-  solvent = solvent.replace(/\d+/g, '<sub>$&</sub>').replace(/-d/, '-<em>d</em>');
-  if (config.digits && (isNaN(config.digits) || config.digits <= 0)) {
-    return { error: 'INVALID_DIGITS_OF_CHEMICAL_SHIFTS' };
-  }
-  const digits = config.digits ? config.digits : 2;
-  if (config.ccDigits && (isNaN(config.ccDigits) || config.ccDigits <= 0)) {
-    return { error: 'INVALID_DIGITS_OF_COUPLING_CONSTANTS' };
-  }
-  const ccDigits = config.ccDigits ? config.ccDigits : 1;
-  const rows = data.split('\n');
-  const cols = [];
-  for (let i = 0; i < rows.length; i++) {
-    if (rows[i] == '' && i < rows.length - 1) {
-      return { error: 'EMPTY_LINE_FOUND' };
+window.SpectraFormatter = {
+  format: function(config) {
+    if (!config || !config.data) {
+      return { error: 'INVALID_INPUT' };
     }
-    if (rows[i] == '' && i == rows.length - 1) {
-      return true;
+    const data = config.data;
+    if (config.nuc && !config.nuc.match(/^\d+[A-Za-z]+$/)) {
+      return { error: 'INVALID_NUCLEUS' };
     }
-    cols[i] = rows[i].split(',');
-    for (let j = 0; j < cols[i].length; j++) {
-      if (cols[i][j] == '') {
-        return { error: 'INVALID_COMMAS_FOUND' };
+    const nuc = config.nuc;
+    if (config.freq && (isNaN(config.freq) || config.freq <= 0)) {
+      return { error: 'INVALID_FREQUENCY' };
+    }
+    const freq = config.freq ? config.freq : 400;
+    const area = config.area ? 1 : 0;
+    let solvent = config.solvent ? config.solvent : 'CDCl3';
+    solvent = solvent.replace(/\d+/g, '<sub>$&</sub>').replace(/-d/, '-<em>d</em>');
+    if (config.digits && (isNaN(config.digits) || config.digits <= 0)) {
+      return { error: 'INVALID_DIGITS_OF_CHEMICAL_SHIFTS' };
+    }
+    const digits = config.digits ? config.digits : 2;
+    if (config.ccDigits && (isNaN(config.ccDigits) || config.ccDigits <= 0)) {
+      return { error: 'INVALID_DIGITS_OF_COUPLING_CONSTANTS' };
+    }
+    const ccDigits = config.ccDigits ? config.ccDigits : 1;
+    const rows = data.split('\n');
+    const cols = [];
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i] == '' && i < rows.length - 1) {
+        return { error: 'EMPTY_LINE_FOUND' };
       }
-      if (isNaN(cols[i][j]) && cols[i][j].indexOf('~') == -1) {
-        return { error: 'NON_NUMERIC_CHARACTERS_FOUND' };
+      if (rows[i] == '' && i == rows.length - 1) {
+        return true;
       }
-      if (cols[i][j] > 1000 || cols[i][j] < -1000) {
-        return { error: 'EXTRAORDINARY_VALUES_FOUND' };
+      cols[i] = rows[i].split(',');
+      for (let j = 0; j < cols[i].length; j++) {
+        if (cols[i][j] == '') {
+          return { error: 'INVALID_COMMAS_FOUND' };
+        }
+        if (isNaN(cols[i][j]) && cols[i][j].indexOf('~') == -1) {
+          return { error: 'NON_NUMERIC_CHARACTERS_FOUND' };
+        }
+        if (cols[i][j] > 1000 || cols[i][j] < -1000) {
+          return { error: 'EXTRAORDINARY_VALUES_FOUND' };
+        }
+      }
+      if (area && cols[i][0] != parseInt(cols[i][0])) {
+        return { error: 'AREA_RATIO_NOT_FOUND' };
+      }
+      else if (area == 0 && cols[i][0].indexOf('.') == -1) {
+        return { error: 'INVALID_AREA_RATIO_FOUND' };
       }
     }
-    if (area && cols[i][0] != parseInt(cols[i][0])) {
-      return { error: 'AREA_RATIO_NOT_FOUND' };
-    }
-    else if (area == 0 && cols[i][0].indexOf('.') == -1) {
-      return { error: 'INVALID_AREA_RATIO_FOUND' };
-    }
-  }
-  const result = format(data, nuc, area, freq, solvent, digits, ccDigits, config.printSingletMultiplicity);
-  return result.substring(0, result.length - 2);
-}
+    return {
+      error: null,
+      output: format(data, nuc, area, freq, solvent, digits, ccDigits, config.printSingletMultiplicity),
+    };
+  },
+};

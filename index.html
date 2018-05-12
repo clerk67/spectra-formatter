@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spectra Formatter</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <style>
+    body {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+    h3 {
+      margin-top: 2rem;
+    }
+    hr {
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    textarea {
+      font-family: monospace;
+      font-size: 16px !important;
+    }
+    .result {
+      background-color: #eee;
+      border-radius: .25rem;
+      margin-top: 1rem;
+      padding: 1rem;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Spectra Formatter</h1>
+      <p class="lead">NMR text generator for Supporting Information of scientific papers</p>
+      <hr>
+
+      <div class="form-group">
+        <label class="control-label"><sup>1</sup>H NMR</label>
+        <textarea class="form-control" id="data-1H" rows="5" placeholder="integral, shift[1] (, shift[2], ...)"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="control-label"><sup>13</sup>C NMR</label>
+        <textarea class="form-control" id="data-13C" rows="5" placeholder="shift[1] (, shift[2], ...)"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="control-label"><sup>19</sup>F NMR</label>
+        <textarea class="form-control" id="data-19F" rows="5" placeholder="integral, shift[1] (, shift[2], ...)"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="control-label"><sup>31</sup>P NMR</label>
+        <textarea class="form-control" id="data-31P" rows="5" placeholder="shift[1] (, shift[2], ...)"></textarea>
+      </div>
+      <button class="btn btn-primary" onClick="format();">Format</button> &nbsp;
+      <button class="btn btn-secondary" data-toggle="modal" data-target="#settings">Options</button>
+      <hr>
+
+      <h3>Result</h3>
+      <p id="result" class="result"><span style="color: grey;">Result will be shown here.</span></p>
+      <p>The above result can be copied and pasted into Microsoft Word without loss of text decorations.</p>
+      <hr>
+
+      <h3>Usage</h3>
+      <p class="lead">The input manners are different depending on the type of nucleus.</p>
+      <h5>Integrable Spectra (e.g. <sup>1</sup>H, <sup>19</sup>F NMR)</h5>
+      <ul>
+        <li>For each peaks, the integral value and chemical shifts (&delta; /ppm) should be written in single line and separated by comma (format: <code>integral, shift</code>). The integral value must be an integer. Trailing commas are not allowed.</li>
+        <li>For split peaks (such as doublet, triplet, doublet of doublets, ...), all split peaks should be gethered into single line (format: <code>integral, shift[1], shift[2], ...</code>). The multiplicities are automatically assigned. The chemical shifts must be written in descending order.</li>
+        <li>For multiplet (complex) peaks, the range of chemical shifts should be specified with <code>~</code> (tilde) symbol (format: <code>integral, shift[1]~shift[2]</code>). The chemical shifts must be written in descending order.</li>
+      </ul>
+      <h5>Non-Integrable Spectra (e.g. <sup>13</sup>C, <sup>31</sup>P NMR)</h5>
+      <ul>
+        <li>For each peaks, the chemical shifts (&delta; /ppm) should be written in single line (format: <code>shift</code>).</li>
+        <li>For split peaks (such as doublet, triplet, doublet of doublets, ...), all split peaks should be gathered into single line (format: <code>shift[1], shift[2], ...</code>). The multiplicities are automatically assigned. The chemical shifts must be written in descending order.</li>
+        <li>For multiplet (complex) peaks, the range of chemical shifts should be specified with <code>~</code> (tilde) symbol (format: <code>shift[1]~shift[2]</code>). The chemical shifts must be written in descending order.</li>
+      </ul>
+      <hr>
+
+      <h3>Examples</h3>
+      <p class="lead" style="margin-bottom: 0;">Ethyl benzoate (C<sub>6</sub>H<sub>5</sub>CO<sub>2</sub>CH<sub>2</sub>CH<sub>3</sub>)</p>
+      <p><small>Reference: http://sdbs.riodb.aist.go.jp (National Institute of Advanced Industrial Science and Technology, September 8, 2014) [<a target="_blank" href="http://sdbs.db.aist.go.jp/sdbs/cgi-bin/direct_frame_disp.cgi?sdbsno=1460">1460</a>]</small></p>
+      <h5><sup>1</sup>H NMR</h5>
+      <p>Input:</p>
+      <pre style="margin-left: 1rem;">2, 8.133~8.023
+3, 7.627~7.331
+2, 4.489, 4.407, 4.328, 4.250
+3, 1.458, 1.379, 1.299</pre>
+      <p>Output:</p>
+      <p class="result"><strong><sup>1</sup>H NMR</strong> (90 MHz, CDCl<sub>3</sub>) &delta; 8.13-8.02 (m, 2H), 7.63-7.33 (m, 3H), 4.37 (q, 2H, <em>J</em> = 7.4 Hz), 1.38 (t, 3H, <em>J</em> = 7.2 Hz);</p>
+      <h5><sup>13</sup>C NMR</h5>
+      <p>Input:</p>
+      <pre style="margin-left: 1rem;">166.540
+132.800
+130.620
+129.570
+128.340
+60.900
+14.330</pre>
+      <p>Output:</p>
+      <p class="result"><strong><sup>13</sup>C NMR</strong> (25.16 MHz, CDCl<sub>3</sub>) &delta; 166.5, 132.8, 130.6, 129.6, 128.3, 60.9, 14.3;</p>
+      <hr>
+
+      <h5>Specifications</h5>
+      <ul>
+        <li>Supported nucleus: <sup>1</sup>H, <sup>13</sup>C, <sup>19</sup>F, <sup>31</sup>P.</li>
+        <li>The output format is based on <a target="_blank" href="http://pubs.acs.org/paragonplus/submission/acs_nmr_guidelines.pdf">NMR Guidelines for ACS Journals</a>.</li>
+        <li>The multiplicities are automatically assigned for: <code>s</code>, <code>d</code>, <code>t</code>, <code>q</code>, <code>quint</code>, <code>dd</code>, <code>dt</code>, <code>td</code>, and <code>m</code> (complex pattern). <code>q</code> and <code>dt</code> are automatically distinguished from <code>dd</code> and <code>td</code> respectively by analysing coupling constants (threshold: <em>J</em> = 1 Hz).</li>
+      </ul>
+    </div>
+
+    <div class="modal fade" id="settings" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Options</h5>
+            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="control-label">Solvent</label>
+              <select class="form-control" id="solvent">
+                <option value="CDCl<sub>3</sub>">chloroform-d3</option>
+                <option value="CD<sub>2</sub>Cl<sub>2</sub>">dichloromethane-d2</option>
+                <option value="C<sub>6</sub>D<sub>6</sub>">benzene-d6</option>
+                <option value="DMF-<i>d</i><sub>7</sub>">DMF-d7</option>
+                <option value="DMSO-<i>d</i><sub>6</sub>">DMSO-d6</option>
+                <option value="THF-<i>d</i><sub>8</sub>">THF-d8</option>
+                <option value="acetone-<i>d</i><sub>6</sub>">acetone-d6</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Number of decimal places in chemical shifts (ppm)</label>
+              <form class="form-inline">
+                <sup>1</sup>H : &nbsp;<input type="text" id="digits-1H" class="form-control" size="8" value="2"> &nbsp;&nbsp;
+                <sup>13</sup>C : &nbsp;<input type="text" id="digits-13C" class="form-control" size="8" value="1"> &nbsp;&nbsp;
+                <sup>19</sup>F : &nbsp;<input type="text" id="digits-19F" class="form-control" size="8" value="1"> &nbsp;&nbsp;
+                <sup>31</sup>P : &nbsp;<input type="text" id="digits-31P" class="form-control" size="8" value="1">
+              </form>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Number of decimal places in coupling constants (Hz)</label>
+              <form class="form-inline">
+                <sup>1</sup>H : &nbsp;<input type="text" id="ccDigits-1H" class="form-control" size="8" value="1"> &nbsp;&nbsp;
+                <sup>13</sup>C : &nbsp;<input type="text" id="ccDigits-13C" class="form-control" size="8" value="1"> &nbsp;&nbsp;
+                <sup>19</sup>F : &nbsp;<input type="text" id="ccDigits-19F" class="form-control" size="8" value="1"> &nbsp;&nbsp;
+                <sup>31</sup>P : &nbsp;<input type="text" id="ccDigits-31P" class="form-control" size="8" value="1">
+              </form>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Acquisition frequency (MHz)</label>
+              <form class="form-inline">
+                <sup>1</sup>H : &nbsp;<input type="text" id="freq-1H" class="form-control" size="8" value="300"> &nbsp;&nbsp;
+                <sup>13</sup>C : &nbsp;<input type="text" id="freq-13C" class="form-control" size="8" value="75"> &nbsp;&nbsp;
+                <sup>19</sup>F : &nbsp;<input type="text" id="freq-19F" class="form-control" size="8" value="282"> &nbsp;&nbsp;
+                <sup>31</sup>P : &nbsp;<input type="text" id="freq-31P" class="form-control" size="8" value="125">
+              </form>
+            </div>
+            <div class="form-group">
+              <input type="checkbox" id="omit-singlet">
+              <label class="control-label" for="omit-singlet">Omit "(s)" for singlet peaks (except for <sup>1</sup>H NMR)</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <script src="https://raw.githubusercontent.com/clerk67/spectra-formatter/master/dist/spectra-formatter.min.js" type="text/javascript"></script>
+    <script>
+    function format() {
+      const nuclei = ['1H', '13C', '19F', '31P'];
+      let html = '';
+      for (let i = 0; i < nuclei.length; i++) {
+        const data = document.getElementById('data-' + nuclei[i]).value;
+        if (data.length > 0) {
+          const config = {
+            nuc: nuclei[i],
+            area: nuclei[i] === '1H' || nuclei[i] === '19F',
+            ccDigits: document.getElementById('ccDigits-' + nuclei[i]).value,
+            data: document.getElementById('data-' + nuclei[i]).value,
+            digits: document.getElementById('digits-' + nuclei[i]).value,
+            freq: document.getElementById('freq-' + nuclei[i]).value,
+            printSingletMultiplicity: nuclei[i] !== '1H' || !document.getElementById('omit-singlet').checked,
+            solvent: document.getElementById('solvent').value,
+          };
+          const result = SpectraFormatter.format(config);
+          if (result.error) {
+            document.getElementById('result').innerHTML = '<strong>ERROR</strong>: ' + result.error;
+            return false;
+          }
+          html += result.output + ' ';
+        }
+      }
+      if (html.length === 0) {
+        html = '<strong>ERROR</strong>: INVALID_INPUT ';
+      }
+      document.getElementById('result').innerHTML = html.slice(0, -1);
+    }
+    </script>
+  </body>
+</html>
